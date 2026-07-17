@@ -22,6 +22,14 @@
   let documentMousemoveHandler = null;
   let documentMouseupHandler = null;
 
+  // 高度調整 - 用於記錄拖曳狀態
+  let isResizing = false;
+  let resizeStartY = 0;
+  let resizeStartHeight = 0;
+  let resizeHandleMousemoveHandler = null;
+  let resizeHandleMouseupHandler = null;
+  let MIN_HEIGHT = 100; // 最小高度 100px
+
   // Scroll 節流 - 使用 requestAnimationFrame
   let scrollFrameId = null;
 
@@ -89,6 +97,53 @@
     title.style.cursor = 'grab';
     title.style.userSelect = 'none';
   }
+
+  function setupTocResize() {
+    if (!tocElement) {
+      return;
+    }
+
+    const resizeHandle = tocElement.querySelector('.ahhong-floating-toc__resize-handle');
+    if (!resizeHandle) {
+      return;
+    }
+
+    // 移除舊的監聽器以防止洩漏
+    if (resizeHandleMousemoveHandler) {
+      document.removeEventListener('mousemove', resizeHandleMousemoveHandler);
+    }
+    if (resizeHandleMouseupHandler) {
+      document.removeEventListener('mouseup', resizeHandleMouseupHandler);
+    }
+
+    resizeHandle.addEventListener('mousedown', (event) => {
+      isResizing = true;
+      resizeStartY = event.clientY;
+      resizeStartHeight = tocElement.offsetHeight;
+      event.preventDefault();
+    });
+
+    resizeHandleMousemoveHandler = (event) => {
+      if (!isResizing || !tocElement) {
+        return;
+      }
+
+      const deltaY = event.clientY - resizeStartY;
+      const newHeight = Math.max(MIN_HEIGHT, resizeStartHeight + deltaY);
+
+      tocElement.style.maxHeight = `${newHeight}px`;
+    };
+
+    resizeHandleMouseupHandler = () => {
+      if (isResizing) {
+        isResizing = false;
+      }
+    };
+
+    document.addEventListener('mousemove', resizeHandleMousemoveHandler);
+    document.addEventListener('mouseup', resizeHandleMouseupHandler);
+  }
+
   function ready(fn) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -262,7 +317,13 @@
     container.appendChild(title);
     container.appendChild(list);
 
+    // 創建並添加高度調整手柄
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'ahhong-floating-toc__resize-handle';
+    container.appendChild(resizeHandle);
+
     setupTocDragging();
+    setupTocResize();
     updateActiveHeading();
     ensureMutationSync();
   }
