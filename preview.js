@@ -7,9 +7,11 @@
   let headings = [];
   let tocElement = null;
   let activeId = '';
-  let observer = null;
   let mutationObserver = null;
   let rebuildTimer = 0;
+  let isProgrammaticScroll = false;
+  let programmaticScrollTimer = 0;
+  let lastScrollY = 0;
 
   function ready(fn) {
     if (document.readyState === 'loading') {
@@ -44,7 +46,7 @@
 
     return Array.from(document.querySelectorAll(HEADING_SELECTOR))
       .filter((heading) => !isInsideToc(heading))
-      .map((heading, index) => {
+      .map((heading) => {
         const text = getHeadingText(heading);
 
         if (!text) {
@@ -70,13 +72,7 @@
         usedIds.add(id);
         heading.id = id;
 
-        return {
-          id,
-          text,
-          level,
-          index,
-          element: heading,
-        };
+        return { id, text, level, element: heading };
       })
       .filter(Boolean);
   }
@@ -120,6 +116,10 @@
       mutationObserver.disconnect();
     }
 
+    // 重置程式捲動旗標，因為 buildToc 表示畫面內容已更新
+    isProgrammaticScroll = false;
+    window.clearTimeout(programmaticScrollTimer);
+
     headings = collectHeadings();
 
     const container = ensureTocElement();
@@ -161,10 +161,19 @@
           return;
         }
 
+        // 鎖定高亮，防止 scroll 事件與 observer 在捲動過程中搶奪
+        isProgrammaticScroll = true;
+        window.clearTimeout(programmaticScrollTimer);
+        setActiveHeading(heading.id);
+
         const top = target.getBoundingClientRect().top + window.pageYOffset - SCROLL_OFFSET;
         window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
         history.replaceState(null, '', `#${heading.id}`);
-        setActiveHeading(heading.id);
+
+        // smooth scroll 約 300ms，結束後恢復自動同步
+        programmaticScrollTimer = window.setTimeout(() => {
+          isProgrammaticScroll = false;
+        }, 300);
       });
 
       item.appendChild(link);
@@ -174,43 +183,29 @@
     container.appendChild(title);
     container.appendChild(list);
 
-    ensureScrollSync();
     updateActiveHeading();
     ensureMutationSync();
   }
 
-  function ensureScrollSync() {
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
+  function updateActiveHeading() {
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
 
-    if (!headings.length || !('IntersectionObserver' in window)) {
+    // 檢測是否有新的 scroll 位置變化，若有則強制重置旗標（使用者主動捲動）
+    if (isProgrammaticScroll && scrollY !== lastScrollY) {
+      isProgrammaticScroll = false;
+      window.clearTimeout(programmaticScrollTimer);
+    }
+    lastScrollY = scrollY;
+
+    if (isProgrammaticScroll) {
       return;
     }
 
-    observer = new IntersectionObserver((entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => b.boundingClientRect.top - a.boundingClientRect.top);
-
-      if (visible.length > 0) {
-        setActiveHeading(visible[0].target.id);
-      }
-    }, {
-      rootMargin: '-20% 0px -65% 0px',
-      threshold: [0, 1],
-    });
-
-    headings.forEach((heading) => observer.observe(heading.element));
-  }
-
-  function updateActiveHeading() {
-    const offsetLine = window.scrollY + SCROLL_OFFSET;
+    const offsetLine = scrollY + SCROLL_OFFSET;
     let current = headings[0];
 
     for (const heading of headings) {
-      if (heading.element.getBoundingClientRect().top + window.scrollY <= offsetLine) {
+      if (heading.element.getBoundingClientRect().top + scrollY <= offsetLine) {
         current = heading;
       } else {
         break;
@@ -244,7 +239,9 @@
   }
 
   function bindGlobalEvents() {
+    // 同時監聽 window 與 document，提高 VS Code webview 相容性
     window.addEventListener('scroll', updateActiveHeading, { passive: true });
+    document.addEventListener('scroll', updateActiveHeading, { passive: true });
     window.addEventListener('resize', scheduleBuild, { passive: true });
     window.addEventListener('load', scheduleBuild, { once: true });
   }
