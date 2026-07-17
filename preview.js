@@ -12,7 +12,58 @@
   let isProgrammaticScroll = false;
   let programmaticScrollTimer = 0;
   let lastScrollY = 0;
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+  let isDraggingInitialized = false;
 
+  function setupTocDragging() {
+    if (!tocElement || isDraggingInitialized) {
+      return;
+    }
+
+    isDraggingInitialized = true;
+    const title = tocElement.querySelector('.ahhong-floating-toc__title');
+    if (!title) {
+      return;
+    }
+
+    title.addEventListener('mousedown', (event) => {
+      isDragging = true;
+      const rect = tocElement.getBoundingClientRect();
+      dragOffsetX = event.clientX - rect.left;
+      dragOffsetY = event.clientY - rect.top;
+      title.style.cursor = 'grabbing';
+      event.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (event) => {
+      if (!isDragging || !tocElement) {
+        return;
+      }
+
+      const newX = event.clientX - dragOffsetX;
+      const newY = event.clientY - dragOffsetY;
+
+      tocElement.style.setProperty('left', `${newX}px`, 'important');
+      tocElement.style.setProperty('top', `${newY}px`, 'important');
+      tocElement.style.setProperty('right', 'auto', 'important');
+      tocElement.style.setProperty('bottom', 'auto', 'important');
+      tocElement.setAttribute('data-position-overridden', 'true');
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        if (title) {
+          title.style.cursor = 'grab';
+        }
+      }
+    });
+
+    title.style.cursor = 'grab';
+    title.style.userSelect = 'none';
+  }
   function ready(fn) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', fn, { once: true });
@@ -120,6 +171,9 @@
     isProgrammaticScroll = false;
     window.clearTimeout(programmaticScrollTimer);
 
+    // 重置拖曳初始化旗標，因為 buildToc 會重新建立 DOM
+    isDraggingInitialized = false;
+
     headings = collectHeadings();
 
     const container = ensureTocElement();
@@ -183,6 +237,7 @@
     container.appendChild(title);
     container.appendChild(list);
 
+    setupTocDragging();
     updateActiveHeading();
     ensureMutationSync();
   }

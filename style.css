@@ -55,6 +55,12 @@ h6 {
     line-height: 1.45;
 }
 
+#ahhong-floating-toc[data-position-overridden="true"] {
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+}
+
 #ahhong-floating-toc[hidden] {
     display: none !important;
 }
@@ -66,6 +72,14 @@ h6 {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #6b7280;
+    cursor: grab;
+    user-select: none;
+    transition: color 0.15s ease;
+}
+
+.ahhong-floating-toc__title:active {
+    cursor: grabbing;
+    color: #374151;
 }
 
 .ahhong-floating-toc__list {
