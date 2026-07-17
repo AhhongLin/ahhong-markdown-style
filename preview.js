@@ -17,6 +17,14 @@
   let dragOffsetY = 0;
   let isDraggingInitialized = false;
 
+  // Event Listener 引用 - 用於移除舊的監聽器
+  let titleMousedownHandler = null;
+  let documentMousemoveHandler = null;
+  let documentMouseupHandler = null;
+
+  // Scroll 節流 - 使用 requestAnimationFrame
+  let scrollFrameId = null;
+
   function setupTocDragging() {
     if (!tocElement || isDraggingInitialized) {
       return;
@@ -28,16 +36,28 @@
       return;
     }
 
-    title.addEventListener('mousedown', (event) => {
+    // 移除舊的監聽器以防止洩漏
+    if (titleMousedownHandler) {
+      title.removeEventListener('mousedown', titleMousedownHandler);
+    }
+    if (documentMousemoveHandler) {
+      document.removeEventListener('mousemove', documentMousemoveHandler);
+    }
+    if (documentMouseupHandler) {
+      document.removeEventListener('mouseup', documentMouseupHandler);
+    }
+
+    // 定義具名的監聽器函數
+    titleMousedownHandler = (event) => {
       isDragging = true;
       const rect = tocElement.getBoundingClientRect();
       dragOffsetX = event.clientX - rect.left;
       dragOffsetY = event.clientY - rect.top;
       title.style.cursor = 'grabbing';
       event.preventDefault();
-    });
+    };
 
-    document.addEventListener('mousemove', (event) => {
+    documentMousemoveHandler = (event) => {
       if (!isDragging || !tocElement) {
         return;
       }
@@ -50,16 +70,21 @@
       tocElement.style.setProperty('right', 'auto', 'important');
       tocElement.style.setProperty('bottom', 'auto', 'important');
       tocElement.setAttribute('data-position-overridden', 'true');
-    });
+    };
 
-    document.addEventListener('mouseup', () => {
+    documentMouseupHandler = () => {
       if (isDragging) {
         isDragging = false;
         if (title) {
           title.style.cursor = 'grab';
         }
       }
-    });
+    };
+
+    // 綁定監聽器
+    title.addEventListener('mousedown', titleMousedownHandler);
+    document.addEventListener('mousemove', documentMousemoveHandler);
+    document.addEventListener('mouseup', documentMouseupHandler);
 
     title.style.cursor = 'grab';
     title.style.userSelect = 'none';
@@ -272,6 +297,18 @@
     }
   }
 
+  // Scroll 節流包裝函數 - 使用 requestAnimationFrame
+  function scheduleActiveHeadingUpdate() {
+    if (scrollFrameId !== null) {
+      return; // 已有待執行的更新，跳過
+    }
+
+    scrollFrameId = window.requestAnimationFrame(() => {
+      updateActiveHeading();
+      scrollFrameId = null;
+    });
+  }
+
   function scheduleBuild() {
     window.clearTimeout(rebuildTimer);
     rebuildTimer = window.setTimeout(buildToc, 100);
@@ -295,8 +332,9 @@
 
   function bindGlobalEvents() {
     // 同時監聽 window 與 document，提高 VS Code webview 相容性
-    window.addEventListener('scroll', updateActiveHeading, { passive: true });
-    document.addEventListener('scroll', updateActiveHeading, { passive: true });
+    // 使用節流包裝函數減少計算頻率
+    window.addEventListener('scroll', scheduleActiveHeadingUpdate, { passive: true });
+    document.addEventListener('scroll', scheduleActiveHeadingUpdate, { passive: true });
     window.addEventListener('resize', scheduleBuild, { passive: true });
     window.addEventListener('load', scheduleBuild, { once: true });
   }

@@ -1,3 +1,43 @@
+/* ===== CSS 變數定義 ===== */
+:root {
+  /* TOC 顏色方案 h1-h6: 紅-橙-琥珀-綠-藍-紫 */
+  --toc-color-h1: #dc2626;
+  --toc-color-h2: #ea580c;
+  --toc-color-h3: #a16207;
+  --toc-color-h4: #15803d;
+  --toc-color-h5: #1d4ed8;
+  --toc-color-h6: #6d28d9;
+
+  /* TOC 層級樣式 */
+  --toc-padding-h1: 12px;
+  --toc-padding-h2: 20px;
+  --toc-padding-h3: 30px;
+  --toc-padding-h4: 40px;
+  --toc-padding-h5: 50px;
+  --toc-padding-h6: 58px;
+
+  --toc-font-h1: 13px;
+  --toc-font-h2: 12.5px;
+  --toc-font-h3: 12px;
+  --toc-font-h4: 11.5px;
+  --toc-font-h5: 11px;
+  --toc-font-h6: 11px;
+
+  --toc-weight-h1: 700;
+  --toc-weight-h2: 600;
+  --toc-weight-h3: 400;
+  --toc-weight-h4: 400;
+  --toc-weight-h5: 400;
+  --toc-weight-h6: 400;
+
+  --toc-opacity-h1: 0.5;
+  --toc-opacity-h2: 0.45;
+  --toc-opacity-h3: 0.4;
+  --toc-opacity-h4: 0.4;
+  --toc-opacity-h5: 0.4;
+  --toc-opacity-h6: 0.4;
+}
+
 h1 {
     background-color: #dc2626 !important;
     color: white !important;
@@ -122,11 +162,11 @@ h6 {
 
 /* --- h1：紅 --- */
 .ahhong-floating-toc__link[data-level="1"] {
-    padding-left: 12px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #dc2626;
-    border-left-color: rgba(220, 38, 38, 0.5);
+    padding-left: var(--toc-padding-h1);
+    font-size: var(--toc-font-h1);
+    font-weight: var(--toc-weight-h1);
+    color: var(--toc-color-h1);
+    border-left-color: rgba(220, 38, 38, var(--toc-opacity-h1));
     margin-top: 6px;
 }
 .ahhong-floating-toc__link[data-level="1"]:first-child {
@@ -134,79 +174,79 @@ h6 {
 }
 .ahhong-floating-toc__link[data-level="1"].is-active {
     background: rgba(220, 38, 38, 0.15);
-    border-left-color: #dc2626;
-    color: #dc2626;
+    border-left-color: var(--toc-color-h1);
+    color: var(--toc-color-h1);
 }
 
 /* --- h2：橙 --- */
 .ahhong-floating-toc__link[data-level="2"] {
-    padding-left: 20px;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: #ea580c;
-    border-left-color: rgba(234, 88, 12, 0.45);
+    padding-left: var(--toc-padding-h2);
+    font-size: var(--toc-font-h2);
+    font-weight: var(--toc-weight-h2);
+    color: var(--toc-color-h2);
+    border-left-color: rgba(234, 88, 12, var(--toc-opacity-h2));
     margin-top: 2px;
 }
 .ahhong-floating-toc__link[data-level="2"].is-active {
     background: rgba(234, 88, 12, 0.15);
-    border-left-color: #ea580c;
-    color: #ea580c;
+    border-left-color: var(--toc-color-h2);
+    color: var(--toc-color-h2);
 }
 
 /* --- h3：黃（琥珀深金） --- */
 .ahhong-floating-toc__link[data-level="3"] {
-    padding-left: 30px;
-    font-size: 12px;
-    font-weight: 400;
-    color: #a16207;
-    border-left-color: rgba(161, 98, 7, 0.4);
+    padding-left: var(--toc-padding-h3);
+    font-size: var(--toc-font-h3);
+    font-weight: var(--toc-weight-h3);
+    color: var(--toc-color-h3);
+    border-left-color: rgba(161, 98, 7, var(--toc-opacity-h3));
 }
 .ahhong-floating-toc__link[data-level="3"].is-active {
     background: rgba(161, 98, 7, 0.15);
-    border-left-color: #a16207;
-    color: #a16207;
+    border-left-color: var(--toc-color-h3);
+    color: var(--toc-color-h3);
 }
 
 /* --- h4：綠 --- */
 .ahhong-floating-toc__link[data-level="4"] {
-    padding-left: 40px;
-    font-size: 11.5px;
-    font-weight: 400;
-    color: #15803d;
-    border-left-color: rgba(21, 128, 61, 0.4);
+    padding-left: var(--toc-padding-h4);
+    font-size: var(--toc-font-h4);
+    font-weight: var(--toc-weight-h4);
+    color: var(--toc-color-h4);
+    border-left-color: rgba(21, 128, 61, var(--toc-opacity-h4));
 }
 .ahhong-floating-toc__link[data-level="4"].is-active {
     background: rgba(21, 128, 61, 0.15);
-    border-left-color: #15803d;
-    color: #15803d;
+    border-left-color: var(--toc-color-h4);
+    color: var(--toc-color-h4);
 }
 
 /* --- h5：藍 --- */
 .ahhong-floating-toc__link[data-level="5"] {
-    padding-left: 50px;
-    font-size: 11px;
-    font-weight: 400;
-    color: #1d4ed8;
-    border-left-color: rgba(29, 78, 216, 0.4);
+    padding-left: var(--toc-padding-h5);
+    font-size: var(--toc-font-h5);
+    font-weight: var(--toc-weight-h5);
+    color: var(--toc-color-h5);
+    border-left-color: rgba(29, 78, 216, var(--toc-opacity-h5));
 }
 .ahhong-floating-toc__link[data-level="5"].is-active {
     background: rgba(29, 78, 216, 0.15);
-    border-left-color: #1d4ed8;
-    color: #1d4ed8;
+    border-left-color: var(--toc-color-h5);
+    color: var(--toc-color-h5);
 }
 
 /* --- h6：紫 --- */
 .ahhong-floating-toc__link[data-level="6"] {
-    padding-left: 58px;
-    font-size: 11px;
-    font-weight: 400;
-    color: #6d28d9;
-    border-left-color: rgba(109, 40, 217, 0.4);
+    padding-left: var(--toc-padding-h6);
+    font-size: var(--toc-font-h6);
+    font-weight: var(--toc-weight-h6);
+    color: var(--toc-color-h6);
+    border-left-color: rgba(109, 40, 217, var(--toc-opacity-h6));
 }
 .ahhong-floating-toc__link[data-level="6"].is-active {
     background: rgba(109, 40, 217, 0.15);
-    border-left-color: #6d28d9;
-    color: #6d28d9;
+    border-left-color: var(--toc-color-h6);
+    color: var(--toc-color-h6);
 }
 
 @media (max-width: 960px) {
