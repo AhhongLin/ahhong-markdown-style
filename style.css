@@ -8,6 +8,11 @@
   --toc-color-h5: #1d4ed8;
   --toc-color-h6: #6d28d9;
 
+  /* TOC 尺寸 */
+  --toc-max-height-desktop: calc(100vh - 200px);
+  --toc-max-height-tablet: 40vh;
+  --toc-max-height-mobile: 32vh;
+
   /* TOC 層級樣式 */
   --toc-padding-h1: 12px;
   --toc-padding-h2: 20px;
@@ -80,7 +85,7 @@ h6 {
     top: 80px;
     right: 24px;
     width: min(320px, calc(100vw - 48px));
-    max-height: calc(100vh - 120px);
+    max-height: var(--toc-max-height-desktop);
     overflow: auto;
     z-index: 9999;
     box-sizing: border-box;
@@ -255,7 +260,7 @@ h6 {
         right: 16px;
         bottom: 16px;
         width: min(280px, calc(100vw - 32px));
-        max-height: 40vh;
+        max-height: var(--toc-max-height-tablet);
     }
 }
 
@@ -264,7 +269,7 @@ h6 {
         right: 12px;
         bottom: 12px;
         width: calc(100vw - 24px);
-        max-height: 32vh;
+        max-height: var(--toc-max-height-mobile);
     }
 
     .ahhong-floating-toc__link {
