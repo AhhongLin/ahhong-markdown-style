@@ -1,9 +1,13 @@
 {
   "name": "ahhong-markdown-style",
   "displayName": "Ahhong-Markdown-Style",
-  "description": "A custom markdown style extension for VSCode.",
+  "description": "A custom markdown preview style extension for VS Code with a floating TOC.",
   "publisher": "ahhong",
-  "version": "0.0.1",
+  "version": "0.0.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/local/ahhong-markdown-style.git"
+  },
   "engines": {
     "vscode": "^1.109.0"
   },
@@ -11,6 +15,7 @@
     "Themes"
   ],
   "contributes": {
-    "markdown.previewStyles": ["./style.css"]
+    "markdown.previewStyles": ["./style.css"],
+    "markdown.previewScripts": ["./preview.js"]
   }
 }
