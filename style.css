@@ -92,7 +92,7 @@ h6 {
     overflow: hidden;
     text-overflow: ellipsis;
     transition: background-color 0.15s ease, color 0.15s ease,
-                border-color 0.15s ease, transform 0.15s ease;
+                border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .ahhong-floating-toc__link:hover {
@@ -101,8 +101,9 @@ h6 {
 }
 
 .ahhong-floating-toc__link.is-active {
-    background: rgba(31, 41, 55, 0.06);
     font-weight: 700;
+    transform: scale(1.03);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* --- h1：紅 --- */
@@ -118,6 +119,7 @@ h6 {
     margin-top: 0;
 }
 .ahhong-floating-toc__link[data-level="1"].is-active {
+    background: rgba(220, 38, 38, 0.15);
     border-left-color: #dc2626;
     color: #dc2626;
 }
@@ -132,6 +134,7 @@ h6 {
     margin-top: 2px;
 }
 .ahhong-floating-toc__link[data-level="2"].is-active {
+    background: rgba(234, 88, 12, 0.15);
     border-left-color: #ea580c;
     color: #ea580c;
 }
@@ -145,6 +148,7 @@ h6 {
     border-left-color: rgba(161, 98, 7, 0.4);
 }
 .ahhong-floating-toc__link[data-level="3"].is-active {
+    background: rgba(161, 98, 7, 0.15);
     border-left-color: #a16207;
     color: #a16207;
 }
@@ -158,6 +162,7 @@ h6 {
     border-left-color: rgba(21, 128, 61, 0.4);
 }
 .ahhong-floating-toc__link[data-level="4"].is-active {
+    background: rgba(21, 128, 61, 0.15);
     border-left-color: #15803d;
     color: #15803d;
 }
@@ -171,6 +176,7 @@ h6 {
     border-left-color: rgba(29, 78, 216, 0.4);
 }
 .ahhong-floating-toc__link[data-level="5"].is-active {
+    background: rgba(29, 78, 216, 0.15);
     border-left-color: #1d4ed8;
     color: #1d4ed8;
 }
@@ -184,6 +190,7 @@ h6 {
     border-left-color: rgba(109, 40, 217, 0.4);
 }
 .ahhong-floating-toc__link[data-level="6"].is-active {
+    background: rgba(109, 40, 217, 0.15);
     border-left-color: #6d28d9;
     color: #6d28d9;
 }
