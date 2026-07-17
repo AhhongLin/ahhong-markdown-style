@@ -143,7 +143,6 @@
     headings.forEach((heading) => {
       const item = document.createElement('li');
       item.className = 'ahhong-floating-toc__item';
-      item.style.paddingLeft = `${Math.max(0, heading.level - 1) * 10}px`;
 
       const link = document.createElement('a');
       link.className = 'ahhong-floating-toc__link';

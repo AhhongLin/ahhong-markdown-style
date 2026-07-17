@@ -1,20 +1,38 @@
 h1 {
-    background-color: brown !important;
+    background-color: #dc2626 !important;
     color: white !important;
     padding: 5px 10px !important;
     border-radius: 3px !important;
 }
 
 h2 {
-    background-color: chocolate !important;
+    background-color: #ea580c !important;
     color: white !important;
     padding: 5px !important;
 }
 
 h3 {
-    background-color: green !important;
+    background-color: #a16207 !important;
     color: white !important;
     padding: 3px 8px !important;
+}
+
+h4 {
+    background-color: #15803d !important;
+    color: white !important;
+    padding: 3px 8px !important;
+}
+
+h5 {
+    background-color: #1d4ed8 !important;
+    color: white !important;
+    padding: 2px 6px !important;
+}
+
+h6 {
+    background-color: #6d28d9 !important;
+    color: white !important;
+    padding: 2px 6px !important;
 }
 
 #ahhong-floating-toc {
@@ -61,17 +79,20 @@ h3 {
     padding: 0;
 }
 
+/* --- 各層共用基礎 --- */
 .ahhong-floating-toc__link {
     display: block;
-    margin: 2px 0;
-    padding: 6px 10px;
-    border-radius: 8px;
+    margin: 1px 0;
+    padding: 5px 10px 5px 12px;
+    border-left: 3px solid transparent;
+    border-radius: 0 8px 8px 0;
     color: inherit;
     text-decoration: none;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease,
+                border-color 0.15s ease, transform 0.15s ease;
 }
 
 .ahhong-floating-toc__link:hover {
@@ -80,29 +101,91 @@ h3 {
 }
 
 .ahhong-floating-toc__link.is-active {
-    background: #1f2937;
-    color: #fff;
+    background: rgba(31, 41, 55, 0.06);
     font-weight: 700;
 }
 
+/* --- h1：紅 --- */
+.ahhong-floating-toc__link[data-level="1"] {
+    padding-left: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #dc2626;
+    border-left-color: rgba(220, 38, 38, 0.5);
+    margin-top: 6px;
+}
+.ahhong-floating-toc__link[data-level="1"]:first-child {
+    margin-top: 0;
+}
+.ahhong-floating-toc__link[data-level="1"].is-active {
+    border-left-color: #dc2626;
+    color: #dc2626;
+}
+
+/* --- h2：橙 --- */
 .ahhong-floating-toc__link[data-level="2"] {
-    padding-left: 18px;
+    padding-left: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #ea580c;
+    border-left-color: rgba(234, 88, 12, 0.45);
+    margin-top: 2px;
+}
+.ahhong-floating-toc__link[data-level="2"].is-active {
+    border-left-color: #ea580c;
+    color: #ea580c;
 }
 
+/* --- h3：黃（琥珀深金） --- */
 .ahhong-floating-toc__link[data-level="3"] {
-    padding-left: 26px;
+    padding-left: 30px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #a16207;
+    border-left-color: rgba(161, 98, 7, 0.4);
+}
+.ahhong-floating-toc__link[data-level="3"].is-active {
+    border-left-color: #a16207;
+    color: #a16207;
 }
 
+/* --- h4：綠 --- */
 .ahhong-floating-toc__link[data-level="4"] {
-    padding-left: 34px;
+    padding-left: 40px;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: #15803d;
+    border-left-color: rgba(21, 128, 61, 0.4);
+}
+.ahhong-floating-toc__link[data-level="4"].is-active {
+    border-left-color: #15803d;
+    color: #15803d;
 }
 
+/* --- h5：藍 --- */
 .ahhong-floating-toc__link[data-level="5"] {
-    padding-left: 42px;
+    padding-left: 50px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #1d4ed8;
+    border-left-color: rgba(29, 78, 216, 0.4);
+}
+.ahhong-floating-toc__link[data-level="5"].is-active {
+    border-left-color: #1d4ed8;
+    color: #1d4ed8;
 }
 
+/* --- h6：紫 --- */
 .ahhong-floating-toc__link[data-level="6"] {
-    padding-left: 50px;
+    padding-left: 58px;
+    font-size: 11px;
+    font-weight: 400;
+    color: #6d28d9;
+    border-left-color: rgba(109, 40, 217, 0.4);
+}
+.ahhong-floating-toc__link[data-level="6"].is-active {
+    border-left-color: #6d28d9;
+    color: #6d28d9;
 }
 
 @media (max-width: 960px) {
