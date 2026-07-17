@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the "ahhong-keymap" extension will be documented in this file.
+All notable changes to the "ahhong-markdown-style" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 

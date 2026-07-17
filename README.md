@@ -1,7 +1,7 @@
 
-# ahhong-keymap
+# ahhong-markdown-style
 
-VS Code 鍵盤快捷鍵自訂專案，提供 ahhong 常用的 keymap 設定。
+markdown style 自訂專案，提供 h1, h2, h3 格式
 
 ## 打包指令
 

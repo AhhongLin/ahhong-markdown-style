@@ -1,0 +1,18 @@
+h1 {
+    background-color: brown !important;
+    color: white !important;
+    padding: 5px 10px !important;
+    border-radius: 3px !important;
+}
+
+h2 {
+    background-color: chocolate !important;
+    color: white !important;
+    padding: 5px !important;
+}
+
+h3 {
+    background-color: green !important;
+    color: white !important;
+    padding: 3px 8px !important;
+}
