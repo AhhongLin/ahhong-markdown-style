@@ -4,7 +4,7 @@
   const HEADING_SELECTOR = 'h1, h2, h3, h4, h5, h6';
   const SCROLL_OFFSET = 72;
 
-  let headings = [];
+  const headingIndex = createHeadingIndex();
   let tocElement = null;
   let activeId = '';
   let mutationObserver = null;
@@ -12,136 +12,164 @@
   let isProgrammaticScroll = false;
   let programmaticScrollTimer = 0;
   let lastScrollY = 0;
-  let isDragging = false;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
-  let isDraggingInitialized = false;
+  let destroyPointerInteractions = null;
 
-  // Event Listener 引用 - 用於移除舊的監聽器
-  let titleMousedownHandler = null;
-  let documentMousemoveHandler = null;
-  let documentMouseupHandler = null;
+  let isCollapsed = true;
 
-  // 高度調整 - 用於記錄拖曳狀態
-  let isResizing = false;
-  let resizeStartY = 0;
-  let resizeStartHeight = 0;
-  let resizeHandleMousemoveHandler = null;
-  let resizeHandleMouseupHandler = null;
-  let MIN_HEIGHT = 100; // 最小高度 100px
+  let listClickHandler = null;
+
+  const DRAG_MOVE_THRESHOLD = 15;
+  const MIN_HEIGHT = 100;
 
   // Scroll 節流 - 使用 requestAnimationFrame
   let scrollFrameId = null;
 
-  function setupTocDragging() {
-    if (!tocElement || isDraggingInitialized) {
-      return;
-    }
-
-    isDraggingInitialized = true;
+  function setupPointerInteractions() {
     const title = tocElement.querySelector('.ahhong-floating-toc__title');
-    if (!title) {
-      return;
-    }
-
-    // 移除舊的監聽器以防止洩漏
-    if (titleMousedownHandler) {
-      title.removeEventListener('mousedown', titleMousedownHandler);
-    }
-    if (documentMousemoveHandler) {
-      document.removeEventListener('mousemove', documentMousemoveHandler);
-    }
-    if (documentMouseupHandler) {
-      document.removeEventListener('mouseup', documentMouseupHandler);
-    }
-
-    // 定義具名的監聽器函數
-    titleMousedownHandler = (event) => {
-      isDragging = true;
-      const rect = tocElement.getBoundingClientRect();
-      dragOffsetX = event.clientX - rect.left;
-      dragOffsetY = event.clientY - rect.top;
-      title.style.cursor = 'grabbing';
-      event.preventDefault();
-    };
-
-    documentMousemoveHandler = (event) => {
-      if (!isDragging || !tocElement) {
-        return;
-      }
-
-      const newX = event.clientX - dragOffsetX;
-      const newY = event.clientY - dragOffsetY;
-
-      tocElement.style.setProperty('left', `${newX}px`, 'important');
-      tocElement.style.setProperty('top', `${newY}px`, 'important');
-      tocElement.style.setProperty('right', 'auto', 'important');
-      tocElement.style.setProperty('bottom', 'auto', 'important');
-      tocElement.setAttribute('data-position-overridden', 'true');
-    };
-
-    documentMouseupHandler = () => {
-      if (isDragging) {
-        isDragging = false;
-        if (title) {
-          title.style.cursor = 'grab';
-        }
-      }
-    };
-
-    // 綁定監聽器
-    title.addEventListener('mousedown', titleMousedownHandler);
-    document.addEventListener('mousemove', documentMousemoveHandler);
-    document.addEventListener('mouseup', documentMouseupHandler);
-
-    title.style.cursor = 'grab';
-    title.style.userSelect = 'none';
-  }
-
-  function setupTocResize() {
-    if (!tocElement) {
-      return;
-    }
-
+    const toggleButton = tocElement.querySelector('.ahhong-floating-toc__toggle');
     const resizeHandle = tocElement.querySelector('.ahhong-floating-toc__resize-handle');
-    if (!resizeHandle) {
-      return;
+    let mode = 'idle';
+    let activePointerId = null;
+    let captureElement = null;
+    let dragSource = null;
+    let startX = 0;
+    let startY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    let startHeight = 0;
+    let suppressNextClick = false;
+
+    function capturePointer(event) {
+      captureElement = event.currentTarget;
+      if (captureElement.setPointerCapture) {
+        captureElement.setPointerCapture(event.pointerId);
+      }
     }
 
-    // 移除舊的監聽器以防止洩漏
-    if (resizeHandleMousemoveHandler) {
-      document.removeEventListener('mousemove', resizeHandleMousemoveHandler);
-    }
-    if (resizeHandleMouseupHandler) {
-      document.removeEventListener('mouseup', resizeHandleMouseupHandler);
+    function canStart(event) {
+      return mode === 'idle' && event.isPrimary !== false && event.button === 0;
     }
 
-    resizeHandle.addEventListener('mousedown', (event) => {
-      isResizing = true;
-      resizeStartY = event.clientY;
-      resizeStartHeight = tocElement.offsetHeight;
-      event.preventDefault();
-    });
-
-    resizeHandleMousemoveHandler = (event) => {
-      if (!isResizing || !tocElement) {
+    function startDrag(event) {
+      if (!canStart(event)) {
         return;
       }
 
-      const deltaY = event.clientY - resizeStartY;
-      const newHeight = Math.max(MIN_HEIGHT, resizeStartHeight + deltaY);
+      mode = 'pressed';
+      activePointerId = event.pointerId;
+      dragSource = event.currentTarget;
+      startX = event.clientX;
+      startY = event.clientY;
+      const rect = tocElement.getBoundingClientRect();
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      title.style.cursor = 'grabbing';
+      capturePointer(event);
+      event.preventDefault();
+    }
 
-      tocElement.style.maxHeight = `${newHeight}px`;
-    };
-
-    resizeHandleMouseupHandler = () => {
-      if (isResizing) {
-        isResizing = false;
+    function startResize(event) {
+      if (!canStart(event)) {
+        return;
       }
-    };
 
-    document.addEventListener('mousemove', resizeHandleMousemoveHandler);
-    document.addEventListener('mouseup', resizeHandleMouseupHandler);
+      mode = 'resizing';
+      activePointerId = event.pointerId;
+      startY = event.clientY;
+      startHeight = tocElement.offsetHeight;
+      capturePointer(event);
+      event.preventDefault();
+    }
+
+    function movePointer(event) {
+      if (event.pointerId !== activePointerId) {
+        return;
+      }
+
+      if (mode === 'pressed') {
+        const movedDistance = Math.hypot(event.clientX - startX, event.clientY - startY);
+        if (movedDistance <= DRAG_MOVE_THRESHOLD) {
+          return;
+        }
+        mode = 'dragging';
+        suppressNextClick = dragSource === toggleButton;
+      }
+
+      if (mode === 'dragging') {
+        const newX = event.clientX - offsetX;
+        const newY = event.clientY - offsetY;
+        const width = tocElement.getBoundingClientRect().width;
+        const newRight = window.innerWidth - newX - width;
+
+        tocElement.style.setProperty('top', `${newY}px`, 'important');
+        tocElement.style.setProperty('right', `${newRight}px`, 'important');
+        tocElement.style.setProperty('left', 'auto', 'important');
+        tocElement.style.setProperty('bottom', 'auto', 'important');
+        tocElement.setAttribute('data-position-overridden', 'true');
+      }
+
+      if (mode !== 'resizing') {
+        return;
+      }
+
+      const deltaY = event.clientY - startY;
+      const newHeight = Math.max(MIN_HEIGHT, startHeight + deltaY);
+      tocElement.style.maxHeight = `${newHeight}px`;
+    }
+
+    function resetInteraction(event) {
+      if (activePointerId === null || (event.pointerId !== undefined && event.pointerId !== activePointerId)) {
+        return;
+      }
+
+      const element = captureElement;
+      const pointerId = activePointerId;
+      mode = 'idle';
+      activePointerId = null;
+      captureElement = null;
+      dragSource = null;
+      title.style.cursor = 'grab';
+
+      if (element && element.hasPointerCapture && element.hasPointerCapture(pointerId)) {
+        element.releasePointerCapture(pointerId);
+      }
+    }
+
+    function toggleClick(event) {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      toggleCollapsed();
+    }
+
+    function togglePointerDown(event) {
+      startDrag(event);
+      event.stopPropagation();
+    }
+
+    title.addEventListener('pointerdown', startDrag);
+    toggleButton.addEventListener('pointerdown', togglePointerDown);
+    toggleButton.addEventListener('click', toggleClick);
+    resizeHandle.addEventListener('pointerdown', startResize);
+    tocElement.addEventListener('pointermove', movePointer);
+    tocElement.addEventListener('pointerup', resetInteraction);
+    tocElement.addEventListener('pointercancel', resetInteraction);
+    tocElement.addEventListener('lostpointercapture', resetInteraction);
+
+    return () => {
+      title.removeEventListener('pointerdown', startDrag);
+      toggleButton.removeEventListener('pointerdown', togglePointerDown);
+      toggleButton.removeEventListener('click', toggleClick);
+      resizeHandle.removeEventListener('pointerdown', startResize);
+      tocElement.removeEventListener('pointermove', movePointer);
+      tocElement.removeEventListener('pointerup', resetInteraction);
+      tocElement.removeEventListener('pointercancel', resetInteraction);
+      tocElement.removeEventListener('lostpointercapture', resetInteraction);
+      resetInteraction({ pointerId: activePointerId });
+    };
   }
 
   function ready(fn) {
@@ -153,59 +181,91 @@
     fn();
   }
 
-  function slugify(value) {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/['"`]/g, '')
-      .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  }
-
-  function getHeadingText(heading) {
-    return (heading.textContent || heading.innerText || '').replace(/\s+/g, ' ').trim();
-  }
-
   function isInsideToc(node) {
-    return Boolean(node.closest && node.closest('#' + TOC_ID));
+    const element = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    return Boolean(element && element.closest('#' + TOC_ID));
   }
 
-  function collectHeadings() {
-    const seen = new Map();
-    const usedIds = new Set();
+  function createHeadingIndex() {
+    let entries = [];
+    let fingerprint = null;
 
-    return Array.from(document.querySelectorAll(HEADING_SELECTOR))
-      .filter((heading) => !isInsideToc(heading))
-      .map((heading) => {
-        const text = getHeadingText(heading);
+    function slugify(value) {
+      return value
+        .toLowerCase()
+        .trim()
+        .replace(/['"`]/g, '')
+        .replace(/[^\w\u4e00-\u9fa5\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    }
 
-        if (!text) {
-          return null;
+    function getText(heading) {
+      return (heading.textContent || heading.innerText || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function collect() {
+      const seen = new Map();
+      const usedIds = new Set();
+
+      return Array.from(document.querySelectorAll(HEADING_SELECTOR))
+        .filter((heading) => !isInsideToc(heading))
+        .map((heading) => {
+          const text = getText(heading);
+          if (!text) {
+            return null;
+          }
+
+          const level = Number(heading.tagName.slice(1));
+          const baseId = heading.id && heading.id.trim() ? heading.id.trim() : (slugify(text) || 'heading');
+          const nextIndex = (seen.get(baseId) || 0) + 1;
+          seen.set(baseId, nextIndex);
+
+          let id = baseId;
+          if (nextIndex > 1 || usedIds.has(id)) {
+            id = `${baseId}-${nextIndex}`;
+          }
+
+          while (usedIds.has(id)) {
+            const suffix = (seen.get(baseId) || 1) + 1;
+            seen.set(baseId, suffix);
+            id = `${baseId}-${suffix}`;
+          }
+
+          usedIds.add(id);
+          heading.id = id;
+          return { id, text, level, element: heading };
+        })
+        .filter(Boolean);
+    }
+
+    return {
+      refresh() {
+        const nextEntries = collect();
+        const nextFingerprint = nextEntries.map(({ id, text, level }) => `${id}\u0000${text}\u0000${level}`).join('\u0001');
+        const changed = nextFingerprint !== fingerprint;
+        entries = nextEntries;
+        fingerprint = nextFingerprint;
+        return changed;
+      },
+      getEntries() {
+        return entries;
+      },
+      findActive(scrollY, offset) {
+        const offsetLine = scrollY + offset;
+        let current = entries[0];
+
+        for (const heading of entries) {
+          if (heading.element.getBoundingClientRect().top + scrollY <= offsetLine) {
+            current = heading;
+          } else {
+            break;
+          }
         }
 
-        const level = Number(heading.tagName.slice(1));
-        const baseId = heading.id && heading.id.trim() ? heading.id.trim() : (slugify(text) || 'heading');
-        const nextIndex = (seen.get(baseId) || 0) + 1;
-        seen.set(baseId, nextIndex);
-
-        let id = baseId;
-        if (nextIndex > 1 || usedIds.has(id)) {
-          id = `${baseId}-${nextIndex}`;
-        }
-
-        while (usedIds.has(id)) {
-          const suffix = (seen.get(baseId) || 1) + 1;
-          seen.set(baseId, suffix);
-          id = `${baseId}-${suffix}`;
-        }
-
-        usedIds.add(id);
-        heading.id = id;
-
-        return { id, text, level, element: heading };
-      })
-      .filter(Boolean);
+        return current;
+      },
+    };
   }
 
   function ensureTocElement() {
@@ -221,6 +281,29 @@
       tocElement.setAttribute('data-floating-toc', 'true');
       tocElement.setAttribute('role', 'navigation');
       tocElement.setAttribute('aria-label', 'Floating table of contents');
+
+      const title = document.createElement('div');
+      title.className = 'ahhong-floating-toc__title';
+
+      const titleText = document.createElement('span');
+      titleText.className = 'ahhong-floating-toc__title-text';
+      titleText.textContent = TOC_TITLE;
+      title.appendChild(titleText);
+
+      const toggleButton = document.createElement('button');
+      toggleButton.type = 'button';
+      toggleButton.className = 'ahhong-floating-toc__toggle';
+
+      const list = document.createElement('ul');
+      list.className = 'ahhong-floating-toc__list';
+
+      const resizeHandle = document.createElement('div');
+      resizeHandle.className = 'ahhong-floating-toc__resize-handle';
+
+      tocElement.appendChild(title);
+      tocElement.appendChild(toggleButton);
+      tocElement.appendChild(list);
+      tocElement.appendChild(resizeHandle);
       document.body.appendChild(tocElement);
     }
 
@@ -242,37 +325,52 @@
     });
   }
 
-  function buildToc() {
-    if (mutationObserver) {
-      mutationObserver.disconnect();
-    }
+  function setupTocNavigation() {
+    const list = tocElement.querySelector('.ahhong-floating-toc__list');
 
-    // 重置程式捲動旗標，因為 buildToc 表示畫面內容已更新
-    isProgrammaticScroll = false;
-    window.clearTimeout(programmaticScrollTimer);
+    listClickHandler = (event) => {
+      const link = event.target.closest && event.target.closest('.ahhong-floating-toc__link');
+      if (!link || !list.contains(link)) {
+        return;
+      }
 
-    // 重置拖曳初始化旗標，因為 buildToc 會重新建立 DOM
-    isDraggingInitialized = false;
+      event.preventDefault();
+      const targetId = link.getAttribute('data-target-id');
+      const target = document.getElementById(targetId);
 
-    headings = collectHeadings();
+      if (!target) {
+        return;
+      }
 
+      isProgrammaticScroll = true;
+      window.clearTimeout(programmaticScrollTimer);
+      setActiveHeading(targetId);
+
+      const top = target.getBoundingClientRect().top + window.pageYOffset - SCROLL_OFFSET;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      history.replaceState(null, '', `#${targetId}`);
+
+      programmaticScrollTimer = window.setTimeout(() => {
+        isProgrammaticScroll = false;
+      }, 300);
+    };
+
+    list.addEventListener('click', listClickHandler);
+  }
+
+  function refreshToc() {
     const container = ensureTocElement();
+    const headingsChanged = headingIndex.refresh();
+    const headings = headingIndex.getEntries();
 
-    if (!headings.length) {
-      container.hidden = true;
-      container.innerHTML = '';
+    if (!headingsChanged) {
       return;
     }
 
-    container.hidden = false;
-    container.innerHTML = '';
+    container.hidden = !headings.length;
 
-    const title = document.createElement('div');
-    title.className = 'ahhong-floating-toc__title';
-    title.textContent = TOC_TITLE;
-
-    const list = document.createElement('ul');
-    list.className = 'ahhong-floating-toc__list';
+    const list = container.querySelector('.ahhong-floating-toc__list');
+    const fragment = document.createDocumentFragment();
 
     headings.forEach((heading) => {
       const item = document.createElement('li');
@@ -286,46 +384,42 @@
       link.setAttribute('data-level', String(heading.level));
       link.setAttribute('aria-label', heading.text);
 
-      link.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        const target = document.getElementById(heading.id);
-
-        if (!target) {
-          return;
-        }
-
-        // 鎖定高亮，防止 scroll 事件與 observer 在捲動過程中搶奪
-        isProgrammaticScroll = true;
-        window.clearTimeout(programmaticScrollTimer);
-        setActiveHeading(heading.id);
-
-        const top = target.getBoundingClientRect().top + window.pageYOffset - SCROLL_OFFSET;
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-        history.replaceState(null, '', `#${heading.id}`);
-
-        // smooth scroll 約 300ms，結束後恢復自動同步
-        programmaticScrollTimer = window.setTimeout(() => {
-          isProgrammaticScroll = false;
-        }, 300);
-      });
-
       item.appendChild(link);
-      list.appendChild(item);
+      fragment.appendChild(item);
     });
 
-    container.appendChild(title);
-    container.appendChild(list);
+    list.replaceChildren(fragment);
 
-    // 創建並添加高度調整手柄
-    const resizeHandle = document.createElement('div');
-    resizeHandle.className = 'ahhong-floating-toc__resize-handle';
-    container.appendChild(resizeHandle);
+    if (!destroyPointerInteractions) {
+      destroyPointerInteractions = setupPointerInteractions();
+      setupTocNavigation();
+    }
+    applyCollapsedState();
+    if (headings.some((heading) => heading.id === activeId)) {
+      setActiveHeading(activeId);
+    } else {
+      updateActiveHeading();
+    }
+  }
 
-    setupTocDragging();
-    setupTocResize();
-    updateActiveHeading();
-    ensureMutationSync();
+  function applyCollapsedState() {
+    if (!tocElement) {
+      return;
+    }
+
+    tocElement.classList.toggle('is-collapsed', isCollapsed);
+
+    const toggleButton = tocElement.querySelector('.ahhong-floating-toc__toggle');
+    if (toggleButton) {
+      toggleButton.textContent = isCollapsed ? '☰' : '－';
+      toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+      toggleButton.setAttribute('aria-label', isCollapsed ? '展開目錄' : '最小化目錄');
+    }
+  }
+
+  function toggleCollapsed() {
+    isCollapsed = !isCollapsed;
+    applyCollapsedState();
   }
 
   function updateActiveHeading() {
@@ -342,16 +436,7 @@
       return;
     }
 
-    const offsetLine = scrollY + SCROLL_OFFSET;
-    let current = headings[0];
-
-    for (const heading of headings) {
-      if (heading.element.getBoundingClientRect().top + scrollY <= offsetLine) {
-        current = heading;
-      } else {
-        break;
-      }
-    }
+    const current = headingIndex.findActive(scrollY, SCROLL_OFFSET);
 
     if (current) {
       setActiveHeading(current.id);
@@ -370,16 +455,17 @@
     });
   }
 
-  function scheduleBuild() {
+  function scheduleRefresh() {
     window.clearTimeout(rebuildTimer);
-    rebuildTimer = window.setTimeout(buildToc, 100);
+    rebuildTimer = window.setTimeout(refreshToc, 100);
   }
 
   function ensureMutationSync() {
     if (!mutationObserver) {
       mutationObserver = new MutationObserver((mutations) => {
-        if (mutations.some((mutation) => mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
-          scheduleBuild();
+        const documentChanged = mutations.some((mutation) => !isInsideToc(mutation.target));
+        if (documentChanged) {
+          scheduleRefresh();
         }
       });
     }
@@ -388,6 +474,9 @@
     mutationObserver.observe(document.body, {
       childList: true,
       subtree: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['id'],
     });
   }
 
@@ -396,12 +485,37 @@
     // 使用節流包裝函數減少計算頻率
     window.addEventListener('scroll', scheduleActiveHeadingUpdate, { passive: true });
     document.addEventListener('scroll', scheduleActiveHeadingUpdate, { passive: true });
-    window.addEventListener('resize', scheduleBuild, { passive: true });
-    window.addEventListener('load', scheduleBuild, { once: true });
+    window.addEventListener('resize', scheduleRefresh, { passive: true });
+    window.addEventListener('load', scheduleRefresh, { once: true });
+    window.addEventListener('pagehide', destroyToc, { once: true });
+  }
+
+  function destroyToc() {
+    window.clearTimeout(rebuildTimer);
+    window.clearTimeout(programmaticScrollTimer);
+    if (scrollFrameId !== null) {
+      window.cancelAnimationFrame(scrollFrameId);
+      scrollFrameId = null;
+    }
+    if (mutationObserver) {
+      mutationObserver.disconnect();
+    }
+
+    const list = tocElement && tocElement.querySelector('.ahhong-floating-toc__list');
+
+    if (list && listClickHandler) list.removeEventListener('click', listClickHandler);
+    if (destroyPointerInteractions) {
+      destroyPointerInteractions();
+      destroyPointerInteractions = null;
+    }
+    window.removeEventListener('scroll', scheduleActiveHeadingUpdate);
+    document.removeEventListener('scroll', scheduleActiveHeadingUpdate);
+    window.removeEventListener('resize', scheduleRefresh);
+    window.removeEventListener('load', scheduleRefresh);
   }
 
   ready(() => {
-    buildToc();
+    refreshToc();
     ensureMutationSync();
     bindGlobalEvents();
   });

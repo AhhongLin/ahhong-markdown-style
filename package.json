@@ -14,8 +14,18 @@
   "categories": [
     "Themes"
   ],
+  "scripts": {
+    "test": "node --test"
+  },
   "contributes": {
-    "markdown.previewStyles": ["./style.css"],
-    "markdown.previewScripts": ["./preview.js"]
+    "markdown.previewStyles": [
+      "./style.css"
+    ],
+    "markdown.previewScripts": [
+      "./preview.js"
+    ]
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
   }
 }

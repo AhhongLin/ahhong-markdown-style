@@ -100,11 +100,11 @@ h6 {
     line-height: 1.45;
     display: flex;
     flex-direction: column;
+    transition: width 0.2s ease, height 0.2s ease, padding 0.2s ease, border-radius 0.2s ease;
 }
 
 #ahhong-floating-toc[data-position-overridden="true"] {
-    top: auto !important;
-    right: auto !important;
+    left: auto !important;
     bottom: auto !important;
 }
 
@@ -112,8 +112,25 @@ h6 {
     display: none !important;
 }
 
+/* 最小化狀態：只保留切換按鈕，其餘內容隱藏、容器縮成方塊 */
+#ahhong-floating-toc.is-collapsed {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    overflow: visible;
+}
+
+#ahhong-floating-toc.is-collapsed .ahhong-floating-toc__title,
+#ahhong-floating-toc.is-collapsed .ahhong-floating-toc__list,
+#ahhong-floating-toc.is-collapsed .ahhong-floating-toc__resize-handle {
+    display: none;
+}
+
 .ahhong-floating-toc__title {
     margin: 0 0 10px;
+    padding-right: 42px;
+    touch-action: none;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -129,10 +146,44 @@ h6 {
     color: #374151;
 }
 
+.ahhong-floating-toc__title-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 最小化/復原切換按鈕：獨立絕對定位於容器右上角，不受 padding 收合/展開變化影響 */
+.ahhong-floating-toc__toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    touch-action: none;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: rgba(120, 120, 120, 0.12);
+    color: #374151;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s ease;
+}
+
+.ahhong-floating-toc__toggle:hover {
+    background: rgba(120, 120, 120, 0.25);
+}
+
 /* 高度調整手柄 */
 .ahhong-floating-toc__resize-handle {
     flex-shrink: 0;
     height: 12px;
+    touch-action: none;
     cursor: row-resize;
     user-select: none;
     display: flex;
