@@ -44,38 +44,38 @@
 }
 
 h1 {
-    background-color: #dc2626 !important;
+    background-color: #502c29 !important;
     color: white !important;
     padding: 5px 10px !important;
     border-radius: 3px !important;
 }
 
 h2 {
-    background-color: #ea580c !important;
+    background-color: #68401f !important;
     color: white !important;
     padding: 5px !important;
 }
 
 h3 {
-    background-color: #a16207 !important;
+    background-color: #504425 !important;
     color: white !important;
     padding: 3px 8px !important;
 }
 
 h4 {
-    background-color: #15803d !important;
+    background-color: #263d30 !important;
     color: white !important;
     padding: 3px 8px !important;
 }
 
 h5 {
-    background-color: #1d4ed8 !important;
+    background-color: #262674 !important;
     color: white !important;
     padding: 2px 6px !important;
 }
 
 h6 {
-    background-color: #6d28d9 !important;
+    background-color: #35195e !important;
     color: white !important;
     padding: 2px 6px !important;
 }
