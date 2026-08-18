@@ -4,7 +4,10 @@ All notable changes to the "ahhong-markdown-style" extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [0.0.4] - 2026-08-18
+### Changed
+
+- Changed inline code text in Markdown previews to red.
 
 ## [0.0.3] - 2026-08-15
 

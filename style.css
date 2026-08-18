@@ -64,6 +64,9 @@ h3 {
 
 h4 {
     background-color: #263d30 !important;
+:not(pre) > code {
+    color: #dc2626 !important;
+}
     color: white !important;
     padding: 3px 8px !important;
 }
@@ -78,6 +81,10 @@ h6 {
     background-color: #35195e !important;
     color: white !important;
     padding: 2px 6px !important;
+}
+
+:not(pre) > code {
+    color: #eb5746 !important;
 }
 
 #ahhong-floating-toc {
