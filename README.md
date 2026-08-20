@@ -7,8 +7,11 @@ markdown preview 自訂專案，提供 h1, h2, h3 樣式與浮動目錄（Floati
 
 * 針對 VS Code 內建 Markdown Preview 顯示浮動 TOC
 * 自動根據目前捲動位置高亮對應標題
-* 點擊 TOC 項目可平滑跳轉到文件段落
+* 點擊 TOC 項目可平滑跳轉到文件段落，點擊後自動折疊 TOC
+* 使用 `mousedown` 與 `contextmenu` 事件處理導航，避免與 VS Code 內建 click handler 衝突
 * 自動抓取 h1 到 h6 標題
+* 支援拖曳移動 TOC 位置及拖曳底部把手調整 TOC 高度
+* 內聯代碼文字顯示為紅色
 
 ## 打包指令
 

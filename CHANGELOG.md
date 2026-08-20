@@ -4,6 +4,14 @@ All notable changes to the "ahhong-markdown-style" extension will be documented 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.0.5] - 2026-08-20
+
+### Changed
+
+- Replaced the `click` event handler on TOC links with `mousedown` (left-button) and `contextmenu` handlers to prevent VS Code's built-in click handler from interfering with in-page navigation.
+- TOC panel now auto-collapses after selecting a heading.
+- Removed `history.replaceState` call from the navigation handler to avoid polluting the browser history.
+
 ## [0.0.4] - 2026-08-18
 ### Changed
 

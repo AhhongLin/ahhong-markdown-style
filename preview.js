@@ -16,7 +16,8 @@
 
   let isCollapsed = true;
 
-  let listClickHandler = null;
+  let listMouseDownHandler = null;
+  let listContextMenuHandler = null;
 
   const DRAG_MOVE_THRESHOLD = 15;
   const MIN_HEIGHT = 100;
@@ -328,13 +329,7 @@
   function setupTocNavigation() {
     const list = tocElement.querySelector('.ahhong-floating-toc__list');
 
-    listClickHandler = (event) => {
-      const link = event.target.closest && event.target.closest('.ahhong-floating-toc__link');
-      if (!link || !list.contains(link)) {
-        return;
-      }
-
-      event.preventDefault();
+    function navigateToLink(link) {
       const targetId = link.getAttribute('data-target-id');
       const target = document.getElementById(targetId);
 
@@ -348,14 +343,40 @@
 
       const top = target.getBoundingClientRect().top + window.pageYOffset - SCROLL_OFFSET;
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      history.replaceState(null, '', `#${targetId}`);
 
       programmaticScrollTimer = window.setTimeout(() => {
         isProgrammaticScroll = false;
       }, 300);
+    }
+
+    listMouseDownHandler = (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const link = event.target.closest && event.target.closest('.ahhong-floating-toc__link');
+      if (!link || !list.contains(link)) {
+        return;
+      }
+
+      // preventDefault 壓制後續 click，避免 VS Code 的 click handler 再次處理
+      event.preventDefault();
+      navigateToLink(link);
+      toggleCollapsed();
     };
 
-    list.addEventListener('click', listClickHandler);
+    listContextMenuHandler = (event) => {
+      const link = event.target.closest && event.target.closest('.ahhong-floating-toc__link');
+      if (!link || !list.contains(link)) {
+        return;
+      }
+
+      event.preventDefault();
+      navigateToLink(link);
+    };
+
+    list.addEventListener('mousedown', listMouseDownHandler);
+    list.addEventListener('contextmenu', listContextMenuHandler);
   }
 
   function refreshToc() {
@@ -503,7 +524,8 @@
 
     const list = tocElement && tocElement.querySelector('.ahhong-floating-toc__list');
 
-    if (list && listClickHandler) list.removeEventListener('click', listClickHandler);
+    if (list && listMouseDownHandler) list.removeEventListener('mousedown', listMouseDownHandler);
+    if (list && listContextMenuHandler) list.removeEventListener('contextmenu', listContextMenuHandler);
     if (destroyPointerInteractions) {
       destroyPointerInteractions();
       destroyPointerInteractions = null;
